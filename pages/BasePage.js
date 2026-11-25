@@ -73,7 +73,9 @@ class BasePage {
   }
 
   /**
-   * Safely clicks an element after ensuring it is located and visible
+   * Safely clicks an element after ensuring it is located and visible,
+   * with automatic scroll into view, retry on stale/intercepted errors,
+   * and fallback to JavaScript click if intercepted.
    * @param {By} locator
    * @param {number} [customTimeout]
    */
@@ -89,11 +91,25 @@ class BasePage {
           remainingTime,
           `Element not enabled for click: ${locator.toString()}`
         );
-        await element.click();
+
+        // Scroll element into viewport for headless stability
+        try {
+          await this.driver.executeScript('arguments[0].scrollIntoView({block: "center", inline: "nearest"});', element);
+        } catch {}
+
+        try {
+          await element.click();
+        } catch (clickErr) {
+          if (clickErr.name === 'ElementClickInterceptedError') {
+            // Fallback to JS click if element is covered by animation or overlay in headless Chrome
+            await this.driver.executeScript('arguments[0].click();', element);
+          } else {
+            throw clickErr;
+          }
+        }
         return;
       } catch (err) {
         lastError = err;
-        // Retry on transient stale or intercepted conditions within timeout
         if (
           err.name === 'StaleElementReferenceError' ||
           err.name === 'ElementClickInterceptedError'
@@ -107,15 +123,41 @@ class BasePage {
   }
 
   /**
-   * Safely clears and types text into an input field
+   * Safely clears and types text into an input field with retries on stale elements
    * @param {By} locator
    * @param {string} text
    * @param {number} [customTimeout]
    */
   async safeType(locator, text, customTimeout = this.timeout) {
-    const element = await this.waitForElementVisible(locator, customTimeout);
-    await element.clear();
-    await element.sendKeys(text);
+    const startTime = Date.now();
+    let lastError;
+    while (Date.now() - startTime < customTimeout) {
+      try {
+        const remainingTime = Math.max(1000, customTimeout - (Date.now() - startTime));
+        const element = await this.waitForElementVisible(locator, remainingTime);
+        await this.driver.wait(
+          until.elementIsEnabled(element),
+          remainingTime,
+          `Element not enabled for typing: ${locator.toString()}`
+        );
+        try {
+          await this.driver.executeScript('arguments[0].scrollIntoView({block: "center", inline: "nearest"});', element);
+        } catch {}
+
+        await element.clear();
+        if (text) {
+          await element.sendKeys(text);
+        }
+        return;
+      } catch (err) {
+        lastError = err;
+        if (err.name === 'StaleElementReferenceError') {
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw lastError || new Error(`Failed to type into element within ${customTimeout}ms: ${locator.toString()}`);
   }
 
   /**
@@ -125,8 +167,22 @@ class BasePage {
    * @returns {Promise<string>}
    */
   async getText(locator, customTimeout = this.timeout) {
-    const element = await this.waitForElementVisible(locator, customTimeout);
-    return (await element.getText()).trim();
+    const startTime = Date.now();
+    let lastError;
+    while (Date.now() - startTime < customTimeout) {
+      try {
+        const remainingTime = Math.max(1000, customTimeout - (Date.now() - startTime));
+        const element = await this.waitForElementVisible(locator, remainingTime);
+        return (await element.getText()).trim();
+      } catch (err) {
+        lastError = err;
+        if (err.name === 'StaleElementReferenceError') {
+          continue;
+        }
+        throw err;
+      }
+    }
+    throw lastError || new Error(`Failed to get text from element within ${customTimeout}ms: ${locator.toString()}`);
   }
 
   /**

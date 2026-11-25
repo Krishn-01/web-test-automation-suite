@@ -29,6 +29,7 @@ class InventoryPage extends BasePage {
    * @returns {Promise<boolean>}
    */
   async isLoaded() {
+    await this.waitForElementVisible(this.pageTitle);
     const title = await this.getText(this.pageTitle);
     return title.toLowerCase() === 'products';
   }
@@ -41,6 +42,16 @@ class InventoryPage extends BasePage {
   async selectSortOption(optionValue) {
     Logger.info(`Sorting products by: ${optionValue}`);
     await this.selectDropdownByValue(this.sortDropdown, optionValue);
+    // Explicit wait for the dropdown to reflect selected value
+    const self = this;
+    await this.driver.wait(
+      async () => {
+        const el = await self.waitForElementVisible(self.sortDropdown);
+        return (await el.getAttribute('value')) === optionValue;
+      },
+      this.timeout,
+      `Sort dropdown value did not update to ${optionValue}`
+    );
   }
 
   /**
@@ -134,12 +145,18 @@ class InventoryPage extends BasePage {
   }
 
   /**
-   * Open sidebar burger menu and click logout
+   * Open sidebar burger menu and click logout with explicit animation/visibility waits
    */
   async logout() {
     Logger.info('Logging out user...');
     await this.safeClick(this.burgerMenuButton);
+    await this.waitForElementVisible(this.logoutSidebarLink);
     await this.safeClick(this.logoutSidebarLink);
+    await this.driver.wait(
+      until.urlIs(this.baseUrl || 'https://www.saucedemo.com/'),
+      this.timeout,
+      'Timed out waiting for logout redirect'
+    );
   }
 }
 

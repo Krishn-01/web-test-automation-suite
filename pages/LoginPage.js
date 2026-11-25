@@ -1,4 +1,4 @@
-const { By } = require('selenium-webdriver');
+const { By, until } = require('selenium-webdriver');
 const BasePage = require('./BasePage');
 const config = require('../config/testConfig');
 const Logger = require('../utils/logger');
@@ -62,6 +62,13 @@ class LoginPage extends BasePage {
     if (username) await this.enterUsername(username);
     if (password) await this.enterPassword(password);
     await this.clickLoginButton();
+    if (username === config.credentials.standardUser.username && password === config.credentials.standardUser.password) {
+      await this.driver.wait(
+        until.urlContains('/inventory.html'),
+        this.timeout,
+        'Timed out waiting for /inventory.html after login'
+      );
+    }
   }
 
   /**

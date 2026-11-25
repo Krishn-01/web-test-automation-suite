@@ -49,6 +49,7 @@ class CheckoutPage extends BasePage {
       this.timeout,
       'Timed out navigating to checkout-step-one.html'
     );
+    await this.waitForElementVisible(this.continueButton);
   }
 
   /**
@@ -91,6 +92,11 @@ class CheckoutPage extends BasePage {
   async finishCheckout() {
     Logger.info('Finishing order (Click Finish)');
     await this.safeClick(this.finishButton);
+    await this.driver.wait(
+      until.urlContains('/checkout-complete.html'),
+      this.timeout,
+      'Timed out navigating to checkout-complete.html'
+    );
   }
 
   /**
