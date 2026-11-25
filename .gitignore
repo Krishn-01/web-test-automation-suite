@@ -1,6 +1,5 @@
 # Logs and dependency directories
 node_modules/
-package-lock.json
 
 # Test outputs
 screenshots/*.png

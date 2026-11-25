@@ -23,19 +23,19 @@ jobs:
       - name: Install Google Chrome
         run: |
           sudo apt-get update
-          sudo apt-get install -y wget curl unzip
+          sudo apt-get install -y wget curl unzip gnupg
           wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg
           echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable
 
       - name: Install NPM dependencies
-        run: npm ci || npm install
+        run: npm ci
 
       - name: Run Headless Selenium Tests
         env:
           HEADLESS: "true"
-        run: npm test
+        run: npm run test:headless
 
       - name: Upload Test Report Artifact
         if: always()
@@ -43,6 +43,7 @@ jobs:
         with:
           name: mochawesome-report
           path: reports/
+          if-no-files-found: ignore
           retention-days: 14
 
       - name: Upload Screenshots on Failure
@@ -51,4 +52,5 @@ jobs:
         with:
           name: failure-screenshots
           path: screenshots/
+          if-no-files-found: ignore
           retention-days: 14
