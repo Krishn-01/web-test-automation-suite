@@ -1,0 +1,16 @@
+# Logs and dependency directories
+node_modules/
+package-lock.json
+
+# Test outputs
+screenshots/*.png
+!screenshots/.gitkeep
+reports/*.html
+reports/*.json
+reports/assets/
+!reports/.gitkeep
+
+# Environment and OS files
+.env
+.DS_Store
+Thumbs.db

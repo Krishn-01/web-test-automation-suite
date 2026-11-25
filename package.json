@@ -1,0 +1,35 @@
+{
+  "name": "web-test-automation-suite",
+  "version": "1.0.0",
+  "description": "Production-ready Web Test Automation Suite using Selenium WebDriver, Mocha, and Chai following Page Object Model (POM) architecture.",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --config .mocharc.json \"tests/**/*.test.js\"",
+    "test:headless": "cross-env HEADLESS=true mocha --config .mocharc.json \"tests/**/*.test.js\"",
+    "test:login": "cross-env HEADLESS=true mocha --config .mocharc.json \"tests/login.test.js\"",
+    "test:validation": "cross-env HEADLESS=true mocha --config .mocharc.json \"tests/formValidation.test.js\"",
+    "test:regression": "cross-env HEADLESS=true mocha --config .mocharc.json \"tests/regression.test.js\""
+  },
+  "keywords": [
+    "selenium",
+    "webdriver",
+    "mocha",
+    "chai",
+    "pom",
+    "page-object-model",
+    "automation",
+    "testing"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chai": "^4.4.1",
+    "cross-env": "^7.0.3",
+    "mocha": "^10.4.0",
+    "mochawesome": "^7.1.3",
+    "selenium-webdriver": "^4.20.0"
+  },
+  "devDependencies": {
+    "chromedriver": "^157.0.2"
+  }
+}
